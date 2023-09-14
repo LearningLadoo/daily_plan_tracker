@@ -1,8 +1,10 @@
-import 'dart:convert';
+import 'dart:ui';
 
-import 'package:daily_plan_tracker/common/constants.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_sticky_header/flutter_sticky_header.dart';
+import 'dart:math' as math;
+import '../common/complex/ContainerWithPerBorder.dart';
+import '../common/components.dart';
+import '../common/constants.dart';
 
 class FriendsPage extends StatefulWidget {
   const FriendsPage({Key? key}) : super(key: key);
@@ -12,17 +14,10 @@ class FriendsPage extends StatefulWidget {
 }
 
 class _FriendsPageState extends State<FriendsPage> {
-  final ScrollController _controllerBase = ScrollController();
-  final ScrollController _controllerTime = ScrollController();
+  String? _selectedUserName;
 
   @override
   void initState() {
-    // Syncing the lists
-    _controllerBase.addListener(() {
-      if (_controllerBase.hasClients && _controllerTime.hasClients) {
-        _controllerTime.jumpTo(_controllerBase.offset);
-      }
-    });
     super.initState();
   }
 
@@ -31,94 +26,196 @@ class _FriendsPageState extends State<FriendsPage> {
     return Container(
       height: screenHeight,
       width: screenWidth,
-      padding: EdgeInsets.symmetric(horizontal: small),
       child: Stack(
         children: [
-          Container(
-            padding: EdgeInsets.only(top: 60 + 30, left: 40),
-            height: screenHeight,
-            width: screenWidth,
-            child: SingleChildScrollView(
-              controller: _controllerTime,
-              child: SizedBox(
-                height: 60 * 25 - 30,
-                width: screenWidth,
-                child: Stack(
-                  children: timeSlots.map((slot) {
-                    Map s = jsonDecode(slot);
-                    String twoDigits(int n) => n.toString().padLeft(2, "0");
-                    return Positioned(
-                      top: s["start"] * 1.0,
-                      child: Container(
-                        height: s["end"] * 1.0 - s["start"],
-                        width: screenWidth-60,
-                        decoration: BoxDecoration(
-                          color: lightColor2.withOpacity(0.8),
-                          borderRadius: BorderRadius.circular(small / 4),
-                        ),
-                        child: Align(
-                            alignment: Alignment.bottomRight,
-                            child: Text(
-                              "${twoDigits(s["start"] ~/ 60)}:${twoDigits(s["start"].remainder(60))} to ${twoDigits(s["end"] ~/ 60)}:${twoDigits(s["end"].remainder(60))}, ${twoDigits((s["end"] - s["start"]))} min ",
-                              style: themeData.textTheme.bodySmall!.copyWith(
-                                  color: Colors.black54,
-                                  fontWeight: FontWeight.bold),
-                            )),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
+          SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.only(top: large, left: screenPadding.left,right: screenPadding.right),
+            child: Column(
+              children: (friendsList??[]).map((details) => friendCard(details)).followedBy([friendInvitationCard()]).toList(),
             ),
           ),
-          CustomScrollView(controller: _controllerBase, slivers: [
-            SliverStickyHeader(
-              header: Container(
-                height: 60.0,
-                color: Colors.lightBlue,
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Header #0',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) => Opacity(
-                    opacity: 0.5,
-                    child: SizedBox(
-                      height: 60,
-                      width: screenWidth,
-                      child: Row(
-                        children: [
-                          Text("${"$i".padLeft(2, "0")}:00"),
-                          SizedBox(
-                            width: small / 2,
-                          ),
-                          Expanded(child: Divider(color: lightColor1)),
-                        ],
-                      ),
-                    ),
-                  ),
-                  childCount: 25,
-                ),
+          xGlassBgEffect(
+            width: screenWidth,
+            height: large,
+            child: Center(
+              child: Text(
+                "Friends",
+                style: themeData.textTheme.displaySmall,
               ),
             ),
-          ]),
+          )
         ],
       ),
     );
   }
+
+  Widget friendCard(Map<String, String> details) {
+    int per = double.parse(details["per"] ?? "69").round();
+    String username = details["username"]!;
+    return Padding(
+      padding: EdgeInsets.only(bottom: small),
+      child: TweenAnimationBuilder(
+          tween: IntTween(begin: 0, end: per),
+          curve: Curves.easeOutSine,
+          duration: const Duration(seconds: 2),
+          builder: (context, i, child) {
+            return ContainerWithPerBorder(
+                height: _selectedUserName == username ? large * 1.5 + small * 1.3 : large * 1.5,
+                width: screenWidth,
+                radius: small * 1.5,
+                emptyProgressColor: lightColor1.withOpacity(0.1),
+                progressColor: lightColor2,
+                progressValue: i / 100,
+                progressWidth: small / 5,
+                child: Card(
+                    margin: EdgeInsets.zero,
+                    child: InkWell(
+                      splashColor: lightColor2.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(small),
+                      onTap: () {
+                        _selectedUserName = _selectedUserName != username ? username : null;
+                        setState(() {});
+                      },
+                      child: SizedBox(
+                        width: screenWidth,
+                        child: Padding(
+                          padding: EdgeInsets.all(small),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 5,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      details["name"] ?? "-",
+                                      style: themeData.textTheme.headlineMedium!.copyWith(fontWeight: FontWeight.w600),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Opacity(opacity: 0.7, child: Text(details["username"] ?? "-")),
+                                    SizedBox(
+                                      height: small - small / 5,
+                                    ),
+                                    if (_selectedUserName == username)
+                                      Row(
+                                        children: [
+                                          SizedBox(
+                                            height: small * 3,
+                                            child: ElevatedButton(
+                                              onPressed: () {},
+                                              style: ElevatedButton.styleFrom(
+                                                  elevation: 0,
+                                                  backgroundColor: lightColor2.withOpacity(0.1),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(small),
+                                                  )),
+                                              child: Text(
+                                                "View",
+                                                style: themeData.textTheme.titleSmall!.copyWith(color: lightColor1.withOpacity(0.75)),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            width: small,
+                                          ),
+                                          SizedBox(
+                                            height: small * 3,
+                                            child: ElevatedButton(
+                                              onPressed: () {},
+                                              style: ElevatedButton.styleFrom(
+                                                  elevation: 0,
+                                                  backgroundColor: Colors.red[900]!.withOpacity(0.17),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(small),
+                                                  )),
+                                              child: Text(
+                                                "Remove",
+                                                style: themeData.textTheme.titleSmall!.copyWith(color: lightColor1.withOpacity(0.75)),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(left: small),
+                                child: Text("$i%", style: themeData.textTheme.displaySmall!),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )));
+          }),
+    );
+  }
+
+  Widget friendInvitationCard() {
+    return Padding(
+      padding: EdgeInsets.only(bottom: small*5),
+      child: ContainerWithPerBorder(
+          height: large * 1.5,
+          width: screenWidth,
+          radius: small * 1.5,
+          emptyProgressColor: lightColor1.withOpacity(0),
+          progressColor: lightColor2,
+          progressValue: 0,
+          progressWidth: small / 5,
+          child: Card(
+              margin: EdgeInsets.zero,
+              color: lightColor2.withOpacity(0.15),
+              child: InkWell(
+                splashColor: lightColor2.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(small),
+                onTap: () {},
+                child: SizedBox(
+                  width: screenWidth,
+                  child: Padding(
+                      padding: EdgeInsets.all(small),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Invite",
+                                  style: themeData.textTheme.headlineMedium!.copyWith(fontWeight: FontWeight.w600),
+                                ),
+                                const Opacity(
+                                    opacity: 0.7,
+                                    child: Text(
+                                      "Send to the people you wish to share\nyour progress with.",
+                                    ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          Padding(
+                            padding: EdgeInsets.all(small),
+                            child: Icon(Icons.send_rounded, color: lightColor2.withOpacity(0.8),size: medium*1.5,),
+                          ),
+                        ],
+                      )),
+                ),
+              ))),
+    );
+  }
 }
 
-List<String> timeSlots = [
-  "{ \"start\": 0, \"end\": 100, \"note\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vehicula lectus ac tellus vulputate.\" }",
-  "{ \"start\": 120, \"end\": 200, \"note\": \"Aenean vel justo in erat malesuada vulputate sed ac libero. Nulla facilisi.\" }",
-  "{ \"start\": 240, \"end\": 310, \"note\": \"Cras feugiat orci nec nisl lacinia, sit amet sollicitudin justo auctor. Maecenas nec lorem id libero malesuada dapibus.\" }",
-  "{ \"start\": 360, \"end\": 390, \"note\": \"Quisque auctor tellus eu libero posuere congue. Integer tristique, justo eget eleifend consectetur, est justo lacinia felis.\" }",
-  "{ \"start\": 480, \"end\": 550, \"note\": \"Vestibulum volutpat libero eu justo auctor bibendum. Sed vehicula, velit eget dictum elementum, felis arcu tincidunt velit.\" }",
-  "{ \"start\": 600, \"end\": 720, \"note\": \"Phasellus euismod justo vel augue feugiat, at congue odio laoreet. Fusce ullamcorper libero vel mattis aliquam.\" }",
-  "{ \"start\": 850, \"end\": 900, \"note\": \"Suspendisse potenti. Fusce vitae dui vel arcu semper rhoncus a sed elit. Fusce eu lacinia purus.\" }",
-  "{ \"start\": 1200, \"end\": 1440, \"note\": \"Nullam auctor elit eu libero eleifend, quis feugiat metus hendrerit. Morbi hendrerit quam a ante aliquet dignissim.\" }"
+List<Map<String, String>> friendsList = [
+  {"name": "Anubhav Sakhuja", "username": "@user1", "uid": "the uid", "per": "35.7"},
+  {"name": "Tannushri Chander", "username": "@user2", "uid": "the uid", "per": "55"},
+  {"name": "Akshit Khandelwal", "username": "@user33", "uid": "the uid", "per": "10"},
+  {"name": "Tannushri Chander", "username": "@user22", "uid": "the uid", "per": "55"},
+  {"name": "Akshit Khandelwal", "username": "@user333", "uid": "the uid", "per": "10"},
+  {"name": "Tannushri Chander", "username": "@user222", "uid": "the uid", "per": "55"},
+  {"name": "Akshit Khandelwal", "username": "@user3333", "uid": "the uid", "per": "10"},
+  {"name": "Raghav Kumar chaurasia", "username": "@user4", "uid": "the uid", "per": "85"},
+  {"name": "Bhola Baba", "username": "@user5", "uid": "the uid", "per": "100"},
 ];
+// List<Map<String, String>>? friendsList;

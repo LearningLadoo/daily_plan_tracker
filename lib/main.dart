@@ -1,3 +1,4 @@
+import 'package:daily_plan_tracker/common/constants.dart';
 import 'package:daily_plan_tracker/initialize.dart';
 import 'package:daily_plan_tracker/pages/home.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Daily time tracker",
-      theme: ThemeData.dark(useMaterial3: true),
+      theme: darkTheme,
       debugShowCheckedModeBanner: false,
       home: const Initialize(),
     );

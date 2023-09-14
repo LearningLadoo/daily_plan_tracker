@@ -88,65 +88,62 @@ class _TimerPageState extends State<TimerPage> with WidgetsBindingObserver {
   }
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // heading
-        Opacity(
-          opacity: 0.5,
-          child: Padding(
-            padding: EdgeInsets.all(small),
-            child: Text(
-              "Track the time",
-              style: themeData.textTheme.headlineSmall!,
-            ),
+    return Padding(
+      padding: screenPadding,
+      child: Column(
+        children: [
+          // heading
+          Text(
+            "Track Time",
+            style: themeData.textTheme.displaySmall,
           ),
-        ),
-        // spacing
-        const Expanded(child: Center()),
-        // timer
-        SizedBox(
-          width: screenWidth * 0.8,
-          child: Card(
-            child: FittedBox(
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: small / 2,
-                  horizontal: small,
-                ),
-                child: Text(
-                  printDuration(currTime.difference(startTime)),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+          // spacing
+          const Expanded(child: Center()),
+          // timer
+          SizedBox(
+            width: screenWidth * 0.8,
+            child: Card(
+              child: FittedBox(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: small / 2,
+                    horizontal: small,
+                  ),
+                  child: Text(
+                    printDuration(currTime.difference(startTime)),
+                    style: themeData.textTheme.displaySmall,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        SizedBox(height: small * 2),
-        SizedBox(
-          width: screenWidth / 3,
-          height: medium,
-          child: ElevatedButton(
-            onPressed: () {
-              if (!active) {
-                // get the initial time
-                startTime = DateTime.now();
-                currTime = DateTime.now();
-                // starting timer
-                startTimer();
-              } else {
-                // stop the timer
-                periodicTimer!.cancel();
-                startTime = currTime;
-              }
-              active = !active;
-              setState(() {});
-            },
-            child: Text(!active ? "Start" : "Finish"),
+          SizedBox(height: small * 2),
+          SizedBox(
+            width: screenWidth / 3,
+            height: medium,
+            child: ElevatedButton(
+              onPressed: () {
+                if (!active) {
+                  // get the initial time
+                  startTime = DateTime.now();
+                  currTime = DateTime.now();
+                  // starting timer
+                  startTimer();
+                } else {
+                  // stop the timer
+                  periodicTimer!.cancel();
+                  startTime = currTime;
+                }
+                active = !active;
+                setState(() {});
+              },
+              child: Text(!active ? "Start" : "Finish"),
+            ),
           ),
-        ),
-        // spacing
-        const Expanded(child: Center()),
-      ],
+          // spacing
+          const Expanded(child: Center()),
+        ],
+      ),
     );
   }
 }

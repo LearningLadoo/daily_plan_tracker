@@ -26,6 +26,8 @@ Future<void> initializeVariables(BuildContext context) async {
   // doubles
   screenWidth = MediaQuery.of(context).size.width;
   screenHeight = MediaQuery.of(context).size.height;
+  statusBarHeight = MediaQuery.of(context).viewPadding.top;
+  bottomNavHeight  = MediaQuery.of(context).padding.bottom;
   // theme data
   themeData = Theme.of(context);
   return;

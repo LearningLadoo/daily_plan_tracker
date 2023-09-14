@@ -5,47 +5,26 @@ double medium = 40;
 double large = 70;
 late double screenWidth;
 late double screenHeight;
+late double statusBarHeight;
+late double bottomNavHeight;
 
 late ThemeData themeData;
-
+ThemeData darkTheme = ThemeData.dark(useMaterial3: true).copyWith(
+    textTheme: ThemeData.dark(useMaterial3: true)
+        .textTheme
+        .copyWith(
+          displaySmall: const TextStyle(fontWeight: FontWeight.w600),
+          displayLarge: const TextStyle(fontWeight: FontWeight.w600),
+        )
+        .apply(displayColor: lightColor1, bodyColor: lightColor1));
 SizedBox smallSpacing = SizedBox(
   height: small,
 );
 SizedBox mediumSpacing = SizedBox(height: medium);
 SizedBox largeSpacing = SizedBox(height: large);
 
-Color lightColor1 = Colors.grey[400]!;
+Color lightColor1 = Colors.grey[300]!.withOpacity(1);
 Color lightColor2 = Colors.deepPurple[200]!;
 
-List<BottomNavigationBarItem> bottomNavBarItems = [
-  BottomNavigationBarItem(
-      label: "Timer",
-      icon: Icon(
-        Icons.timer_outlined,
-        color: lightColor1,
-      ),
-      activeIcon: Icon(
-        Icons.timer_rounded,
-        color: lightColor2,
-      )),
-  BottomNavigationBarItem(
-      label: "Day",
-      icon: Icon(
-        Icons.view_day_outlined,
-        color: lightColor1,
-      ),
-      activeIcon: Icon(
-        Icons.view_day,
-        color: lightColor2,
-      )),
-  BottomNavigationBarItem(
-      label: "friends",
-      icon: Icon(
-        Icons.people_outline,
-        color: lightColor1,
-      ),
-      activeIcon: Icon(
-        Icons.people_rounded,
-        color: lightColor2,
-      )),
-];
+EdgeInsets screenPadding =
+    EdgeInsets.fromLTRB(small * 1.5, small, small * 1.5, 0);
